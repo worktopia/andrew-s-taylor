@@ -1985,7 +1985,7 @@ $blacklistapps = @(
      }
 }
 
-##Remove Chrome
+<# ##Remove Chrome
 $chrome32path = "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Google Chrome"
 
 if ($null -ne $chrome32path) {
@@ -2014,7 +2014,7 @@ Start-Process "$directory\Google\Chrome\Application\$version\Installer\setup.exe
 
 
 }
-
+#>
 ##Remove home versions of Office
 $OSInfo = Get-WmiObject -Class Win32_OperatingSystem
 $AllLanguages = $OSInfo.MUILanguages
