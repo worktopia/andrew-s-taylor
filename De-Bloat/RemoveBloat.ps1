@@ -17,7 +17,7 @@
 .OUTPUTS
 C:\ProgramData\Debloat\Debloat.log
 .NOTES
-  Version:        5.0.4
+  Version:        5.0.12
   Author:         Andrew Taylor
   Twitter:        @AndrewTaylor_2
   WWW:            andrewstaylor.com
@@ -98,6 +98,11 @@ C:\ProgramData\Debloat\Debloat.log
   Change 03/06/2024 - Added registry key to block "Tell me about this picture" icon
   Change 06/06/2024 - Added keys to block Windows Recall
   Change 07/06/2024 - New fixes for HP and McAfee (thanks to Keith Hay)
+  Change 24/06/2024 - Added Microsoft.SecHealthUI to whitelist
+  Change 26/06/2024 - Fix when run outside of ESP
+  Change 04/07/2024 - Dell fix for "|"
+  Change 08/07/2024 - Made whitelist more standard across platforms and removed bloat list to use only whitelisting
+  Change 08/07/2024 - Added start.bin
 N/A
 #>
 
@@ -325,7 +330,19 @@ switch ($locale) {
         'Microsoft.DesktopAppInstaller',
         'WindSynthBerry',
         'MIDIBerry',
-        'Slack'
+        'Slack',
+        'Microsoft.SecHealthUI',
+        "WavesAudio.MaxxAudioProforDell2019"
+        "Dell - Extension*"
+        "Dell, Inc. - Firmware*"
+        "Dell Optimizer Core"
+        "Dell SupportAssist Remediation"
+        "Dell SupportAssist OS Recovery Plugin for Dell Update"
+        "Dell Pair"
+        "Dell Display Manager 2.0"
+        "Dell Display Manager 2.1"
+        "Dell Display Manager 2.2"
+        "Dell Peripheral Manager"
     )
     ##If $customwhitelist is set, split on the comma and add to whitelist
     if ($customwhitelist) {
@@ -374,7 +391,37 @@ switch ($locale) {
         'Microsoft.VCLibs.140.00',
         'Microsoft.Services.Store.Engagement',
         'Microsoft.UI.Xaml.2.0',
-        '*Nvidia*'
+        '*Nvidia*',
+        "Microsoft.AsyncTextService",
+        "Microsoft.UI.Xaml.CBS",
+        "Microsoft.Windows.CallingShellApp",
+        "Microsoft.Windows.OOBENetworkConnectionFlow",
+        "Microsoft.Windows.PrintQueueActionCenter",
+        "Microsoft.Windows.StartMenuExperienceHost",
+        "MicrosoftWindows.Client.CBS",
+        "MicrosoftWindows.Client.Core",
+        "MicrosoftWindows.UndockedDevKit",
+        "NcsiUwpApp",
+        "Microsoft.NET.Native.Runtime.2.2",
+        "Microsoft.NET.Native.Framework.2.2",
+        "Microsoft.UI.Xaml.2.8",
+        "Microsoft.UI.Xaml.2.7",
+        "Microsoft.UI.Xaml.2.3",
+        "Microsoft.UI.Xaml.2.4",
+        "Microsoft.UI.Xaml.2.1",
+        "Microsoft.UI.Xaml.2.2",
+        "Microsoft.UI.Xaml.2.5",
+        "Microsoft.UI.Xaml.2.6",
+        "Microsoft.VCLibs.140.00.UWPDesktop",
+        "MicrosoftWindows.Client.LKG",
+        "MicrosoftWindows.Client.FileExp",
+        "Microsoft.WindowsAppRuntime.1.5",
+        "Microsoft.WindowsAppRuntime.1.3",
+        "Microsoft.WindowsAppRuntime.1.1",
+        "Microsoft.WindowsAppRuntime.1.2",
+        "Microsoft.WindowsAppRuntime.1.4",
+        "Microsoft.Windows.OOBENetworkCaptivePortal",
+        "Microsoft.Windows.Search"
     )
 
     ##Combine the two arrays
@@ -387,10 +434,10 @@ switch ($locale) {
         $displayname = $appxprov.DisplayName
         write-host "Removing $displayname AppX Provisioning Package"
         try {
-            Remove-AppxProvisionedPackage -PackageName $packagename -Online
+            Remove-AppxProvisionedPackage -PackageName $packagename -Online -ErrorAction SilentlyContinue
         }
         catch {
-            
+            write-host "Unable to remove $displayname AppX Provisioning Package"
         }
         write-host "Removed $displayname AppX Provisioning Package"
     }
@@ -400,136 +447,21 @@ switch ($locale) {
     foreach ($appxapp in $appxinstalled) {
         $packagename = $appxapp.PackageFullName
         $displayname = $appxapp.Name
-        ##Check if exists first
-        if (Get-AppxPackage -Name $packagename -ErrorAction SilentlyContinue) {
             write-host "$displayname AppX Package exists"
             write-host "Removing $displayname AppX Package"
             try {
-                Remove-AppxPackage -Package $packagename -AllUsers
+                Remove-AppxPackage -Package $packagename -AllUsers -ErrorAction SilentlyContinue
+                write-host "Removed $displayname AppX Package"
             }
             catch {
-                
+                write-host "$displayname AppX Package does not exist"
             }
-            write-host "Removed $displayname AppX Package"
-        } else {
-            write-host "$displayname AppX Package does not exist"
-            # Skip the removal process
-        }
+            
+
 
     }
     
 
-
-##Remove bloat
-$Bloatware = @(
-    #Unnecessary Windows 10/11 AppX Apps
-    "Microsoft.549981C3F5F10"
-    "Microsoft.BingNews"
-    "Microsoft.GetHelp"
-    "Microsoft.Getstarted"
-    "Microsoft.Messaging"
-    "Microsoft.Microsoft3DViewer"
-    "Microsoft.MicrosoftOfficeHub"
-    "Microsoft.MicrosoftSolitaireCollection"
-    "Microsoft.NetworkSpeedTest"
-    "Microsoft.MixedReality.Portal"
-    "Microsoft.News"
-    "Microsoft.Office.Lens"
-    "Microsoft.Office.OneNote"
-    "Microsoft.Office.Sway"
-    "Microsoft.OneConnect"
-    "Microsoft.People"
-    "Microsoft.Print3D"
-    "Microsoft.RemoteDesktop"
-    "Microsoft.SkypeApp"
-    "Microsoft.StorePurchaseApp"
-    "Microsoft.Office.Todo.List"
-    "Microsoft.Whiteboard"
-    "Microsoft.WindowsAlarms"
-    #"Microsoft.WindowsCamera"
-    "microsoft.windowscommunicationsapps"
-    "Microsoft.WindowsFeedbackHub"
-    "Microsoft.WindowsMaps"
-    "Microsoft.WindowsSoundRecorder"
-    "Microsoft.Xbox.TCUI"
-    "Microsoft.XboxApp"
-    "Microsoft.XboxGameOverlay"
-    "Microsoft.XboxIdentityProvider"
-    "Microsoft.XboxSpeechToTextOverlay"
-    "Microsoft.ZuneMusic"
-    "Microsoft.ZuneVideo"
-    "MicrosoftTeams"
-    "Microsoft.YourPhone"
-    "Microsoft.XboxGamingOverlay_5.721.10202.0_neutral_~_8wekyb3d8bbwe"
-    "Microsoft.GamingApp"
-    "Microsoft.Todos"
-    "Microsoft.PowerAutomateDesktop"
-    "SpotifyAB.SpotifyMusic"
-    "Microsoft.MicrosoftJournal"
-    "Disney.37853FC22B2CE"
-    "*EclipseManager*"
-    "*ActiproSoftwareLLC*"
-    "*AdobeSystemsIncorporated.AdobePhotoshopExpress*"
-    "*Duolingo-LearnLanguagesforFree*"
-    "*PandoraMediaInc*"
-    "*CandyCrush*"
-    "*BubbleWitch3Saga*"
-    "*Wunderlist*"
-    "*Flipboard*"
-    "*Twitter*"
-    "*Facebook*"
-    "*Spotify*"
-    "*Minecraft*"
-    "*Royal Revolt*"
-    "*Sway*"
-    "*Speed Test*"
-    "*Dolby*"
-    "*Office*"
-    "*Disney*"
-    "clipchamp.clipchamp"
-    "*gaming*"
-    "MicrosoftCorporationII.MicrosoftFamily"
-    "C27EB4BA.DropboxOEM*"
-    "*DevHome*"
-    "MicrosoftCorporationII.QuickAssist"
-    #Optional: Typically not removed but you can if you need to for some reason
-    #"*Microsoft.Advertising.Xaml_10.1712.5.0_x64__8wekyb3d8bbwe*"
-    #"*Microsoft.Advertising.Xaml_10.1712.5.0_x86__8wekyb3d8bbwe*"
-    #"*Microsoft.BingWeather*"
-    #"*Microsoft.MSPaint*"
-    #"*Microsoft.MicrosoftStickyNotes*"
-    #"*Microsoft.Windows.Photos*"
-    #"*Microsoft.WindowsCalculator*"
-    #"*Microsoft.WindowsStore*"
-)
-##If custom whitelist specified, remove from array
-if ($customwhitelist) {
-    $customWhitelistApps = $customwhitelist -split ","
-    $Bloatware = $Bloatware | Where-Object { $customWhitelistApps -notcontains $_ }
-}
-    
-
-    foreach ($Bloat in $Bloatware) {
-        
-        if (Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat -ErrorAction SilentlyContinue) {
-            Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online
-            Write-Host "Removed provisioned package for $Bloat."
-        } else {
-            Write-Host "Provisioned package for $Bloat not found."
-        }
-
-        if (Get-AppxPackage -Name $Bloat -ErrorAction SilentlyContinue) {
-            Get-AppxPackage -allusers -Name $Bloat | Remove-AppxPackage -AllUsers
-            Write-Host "Removed $Bloat."
-        } else {
-            Write-Host "$Bloat not found."
-        }
-
-
-
-        
-
-    }
 ############################################################################################################
 #                                        Remove Registry Keys                                              #
 #                                                                                                          #
@@ -900,29 +832,6 @@ Get-AppxPackage - allusers Microsoft.549981C3F5F10 | Remove AppxPackage
 ############################################################################################################
     #Windows 11 Customisations
     write-host "Removing Windows 11 Customisations"
-    #Remove XBox Game Bar
-    
-    $packages = @(
-        "Microsoft.XboxGamingOverlay",
-        "Microsoft.XboxGameCallableUI",
-        "Microsoft.549981C3F5F10",
-        "*getstarted*",
-        "Microsoft.Windows.ParentalControls"
-    )
-    ##If custom whitelist specified, remove from array
-if ($customwhitelist) {
-    $customWhitelistApps = $customwhitelist -split ","
-    $packages = $packages | Where-Object { $customWhitelistApps -notcontains $_ }
-}
-    
-
-    foreach ($package in $packages) {
-        $appPackage = Get-AppxPackage -allusers $package -ErrorAction SilentlyContinue
-        if ($appPackage) {
-            Remove-AppxPackage -Package $appPackage.PackageFullName -AllUsers
-            Write-Host "Removed $package"
-        }
-    }
 
    #Remove Teams Chat
 $MSTeams = "MicrosoftTeams"
@@ -1176,6 +1085,10 @@ $blankjson = @'
 '@
 
 $blankjson | Out-File "C:\Users\Default\AppData\Local\Microsoft\Windows\Shell\LayoutModification.xml" -Encoding utf8 -Force
+
+MkDir -Path "C:\Users\Default\AppData\Local\Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState" -Force -ErrorAction SilentlyContinue | Out-Null
+$starturl = "https://github.com/andrew-s-taylor/public/raw/main/De-Bloat/start2.bin"
+invoke-webrequest -uri $starturl -outfile "C:\Users\Default\AppData\Local\Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState\Start2.bin"
 }
 
 
@@ -1452,12 +1365,9 @@ $UninstallPrograms = @(
 
 )
 
-##Add HP whitelist
-    $WhitelistedApps += @(
-)
 
 
-$UninstallPrograms = $UninstallPrograms | Where-Object{$WhitelistedApps -notcontains $_}
+$UninstallPrograms = $UninstallPrograms | Where-Object{$appstoignore -notcontains $_}
 
 $HPidentifier = "AD2F1837"
 
@@ -1570,22 +1480,7 @@ $UninstallPrograms = @(
 
 
 
-$WhitelistedApps += @(
-    "WavesAudio.MaxxAudioProforDell2019"
-    "Dell - Extension*"
-    "Dell, Inc. - Firmware*"
-    "Dell Optimizer Core"
-    "Dell SupportAssist Remediation"
-    "Dell SupportAssist OS Recovery Plugin for Dell Update"
-    "Dell Pair"
-    "Dell Display Manager 2.0"
-    "Dell Display Manager 2.1"
-    "Dell Display Manager 2.2"
-    "Dell Peripheral Manager"
-)
-
-
-    $UninstallPrograms = $UninstallPrograms | Where-Object{$WhitelistedApps -notcontains $_}
+    $UninstallPrograms = $UninstallPrograms | Where-Object{$appstoignore -notcontains $_}
 
 
 foreach ($app in $UninstallPrograms) {
@@ -1613,7 +1508,7 @@ foreach ($app in $UninstallPrograms) {
 ##Belt and braces, remove via CIM too
 foreach ($program in $UninstallPrograms) {
     write-host "Removing $program"
-    Get-CimInstance -Classname Win32_Product | Where-Object Name -Match $program | Invoke-CimMethod -MethodName UnInstall
+    Get-CimInstance -Query "SELECT * FROM Win32_Product WHERE name = '$program'" | Invoke-CimMethod -MethodName Uninstall
     }
 
 ##Manual Removals
@@ -1765,11 +1660,8 @@ if ($manufacturer -like "Lenovo") {
         "ElevocTechnologyCo.Ltd.SmartMicrophoneSettings_1.1.49.0_x64__ttaqwwhyt5s6t"
     )
 
-        ##If custom whitelist specified, remove from array
-        if ($customwhitelist) {
-            $customWhitelistApps = $customwhitelist -split ","
-            $UninstallPrograms = $UninstallPrograms | Where-Object { $customWhitelistApps -notcontains $_ }
-        }
+
+            $UninstallPrograms = $UninstallPrograms | Where-Object { $appstoignore -notcontains $_ }
     
     
         
@@ -2104,8 +1996,8 @@ Stop-Transcript
 # SIG # Begin signature block
 # MIIoGQYJKoZIhvcNAQcCoIIoCjCCKAYCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCnCRCCIXp6CpWK
-# SpfCeOkfx3EfRpwHzPRpzpbZ3FXulaCCIRwwggWNMIIEdaADAgECAhAOmxiO+dAt
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBhpH4yYRlCikgD
+# s7SL649aNBLkAte77ATu+SX0hftSc6CCIRwwggWNMIIEdaADAgECAhAOmxiO+dAt
 # 5+/bUOIIQBhaMA0GCSqGSIb3DQEBDAUAMGUxCzAJBgNVBAYTAlVTMRUwEwYDVQQK
 # EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xJDAiBgNV
 # BAMTG0RpZ2lDZXJ0IEFzc3VyZWQgSUQgUm9vdCBDQTAeFw0yMjA4MDEwMDAwMDBa
@@ -2287,33 +2179,33 @@ Stop-Transcript
 # aWduaW5nIFJTQTQwOTYgU0hBMzg0IDIwMjEgQ0ExAhAIsZ/Ns9rzsDFVWAgBLwDp
 # MA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJ
 # KoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQB
-# gjcCARUwLwYJKoZIhvcNAQkEMSIEID4VcSVQMhYIEoT1Pb541OXxOuhRhgGozDqI
-# XIWJXbhdMA0GCSqGSIb3DQEBAQUABIICAG14HvlmmTBC6gDTFmMqtOtXb/w1ojUM
-# MT98UTWjcan6+N9WPar2a9IW6KZZoEPjDDuA0LdBxfrPQu0drdQ3Ax6k6hnFiaF7
-# RgChgv11MYUQaTT801ZnIrsn20xgz+wRmRcz35w1tEE/29JG+7TybbVdTu2Ac5QI
-# ozSY3FKgeL9xugRyvxnuycLlmsDaw+uZCAx1WLCFkgSudgKP+wGg/1aqQi8jBGZQ
-# GFqy3NLS3zNVASmX/8XjjUhfU4HZfYZe4LqA4xGPmgwbXedI9mbxM6o6MmdcpdKP
-# ZRKm/GtUJL+gwgxzWcY5M0/wZZqgTNmF7iXPcqY1oPmFUj1hoavaIA1BmB5PWLy1
-# 1SWTJ/VDQc3YLGmAU9QenlyQQzQOQ0gBkrgiNkn6fKVvzzeyWWdnFTFgA2exVnzo
-# J2iv2swgsR8ZOp7dl8yuxrr17/cVYfvk/kQiQu38QmdxB/TdxEEsAReq6B489jy0
-# Xz2jB2Um/uOyUjK1fi3f451ZBFR6iaIdSGRtmcdtyNwblJVP5oczOGhRya1W+kRv
-# YW65LD9PkqjTzUX7pEwhS6qeDOSvRAcSd2frR0lpDZWetKCJZoNcefmImy/uo/Vo
-# RGJK2BA91/DYKF3lcrtWCF5AiUgsKuE4xcInlMnB/ivAxAT6DdGz0R4/QPsJbjOn
-# yiNp0GuKVAqSoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJAgEBMHcwYzELMAkG
+# gjcCARUwLwYJKoZIhvcNAQkEMSIEIL5Gs/RnsOtA/vwph9Ydr1AtqM2CVo5AX7Tq
+# 7VH5Y+gqMA0GCSqGSIb3DQEBAQUABIICAEFA0Jd/IwqyojQOsJo6he7sooVoGcQU
+# HmyEe8BiSglypOjAlLDqhebx54JpJb5j9ix5M/mxKGuJZ2jh9hKCstDb8gvXE0fX
+# TZyhegkQz2jnlF3Hnr7El0Ov+o8O7PelFHbaM5MSDbycv2gQIIXrSmEGk8umiaOK
+# a4eoL3yM+VtKthGCsNWuNPbCJt2P0XmNpG8jZKrO1v+ql5QBMXsP4VQWf5tKPmpx
+# DBqzUhKEbD6YIh9RejKGB7yEHia7J29P4rLaGHeTP0mkv1xSt9La3jz8pqbTO/1p
+# U+QF93dKt27zRJqMpuT/7zXpj6NzBMGL79Dc9wPa5Blm/GH19He3UHgcGlq85k7I
+# 5gSBSjucMYOE85A8W/ZP1oWiGKmrfilqq/Z0XVLJx30z5R/cqIQGMhC+RUHOFnIC
+# GZBw/Sulbdsd/rbxC8wr+vGamJW0qW9NowboJ/j/HFir3NDS+SFKzcbhgZMYq6NC
+# 3PkUg28+oacxn+2W4+/Z51Dj6K6+C6E0gjj8u4Na5AqZZzvTDvSZuECYiKXot4uC
+# nzimIhStO5Qzo9i69fjmxBKCiga9LBty4OegjJbLuXHXuN0dQJSCXvHNExFMyZus
+# 88ck/cpsBCMvwc1/nN7vHBg8nmjgiV7Nouu0AYDyJqzcso0x3rDXSz/FDRDu1+bH
+# juDaKayMHv+4oYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJAgEBMHcwYzELMAkG
 # A1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTswOQYDVQQDEzJEaWdp
 # Q2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVTdGFtcGluZyBDQQIQ
 # BUSv85SdCDmmv9s/X+VhFjANBglghkgBZQMEAgEFAKBpMBgGCSqGSIb3DQEJAzEL
-# BgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDYwNzIwMDk1MVowLwYJKoZI
-# hvcNAQkEMSIEIHtcDblUbzKShaKyP+2K2fwo4LyG2rgnX4Cip1eyM1yiMA0GCSqG
-# SIb3DQEBAQUABIICAGJSpX+4tRgj6kC7iHo0GXS0vwzHYqijzF8sh7TSXGTEjAGF
-# E/Daw3yD4yB+Qf41UuRm0+e5XFKblwruHJ15u9+Cdl71izVJKnir+RUV5lU1Qdmo
-# IG+fojHvIZP+Oyyf8CGD4VqIcYWGxpuwuAVSaYerWA99Nz7P3sKiJmDf13bjCbHC
-# 01e+Ew3JhKtdk/nAkc936WU/2CDv/R40d9CrQ4+fm5be/FVWWIYASdOmcUuctSx6
-# 5HiKuXyWltaMflxAVlXwcVqLhx/LvSJbZFrBWGNRGgn+oeo2RWVsFABGPGAqrsvr
-# qQRqQxSloGdGIshitfTNw2QW09O1Ff8iEKLEYp26AlBQpNorxPGqJ2m0wxyM30oO
-# +EJZM7k3VbsIgLas6T1AmtGTUn86mXwatnsEtU6LAuw3mHz/+aXinCzm31NXW/oF
-# Y1Nj2Tw4osBTIF4CAbFKXuF4qA2Ty2LE2cGyiuipm6YZR9EJkFLRvIIptbVDsZRe
-# FPegncBWriMYt2sTSL47Qo1Qtd8VnHtCzC/7QaPWu12ZWcHAjMjRlCS6PclQH2Pi
-# LKLXHi6vo/ijRC7GHY9nWaEZrHs1fVn/e3c8yxXa54MZjBNoIYzRrkAPNoQsofPz
-# Q1Xl+zW2bSCRRY/QiiB6t9od0if2JrgIguKbgyBP8eRPhZjQEFE0PLU2jIHK
+# BgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDcwODEzNTkwNlowLwYJKoZI
+# hvcNAQkEMSIEIGsv5GuMCgfg6+vborKeYtCnXznARS47tVa2T5k3FaSBMA0GCSqG
+# SIb3DQEBAQUABIICAFly28YtVyZnzT8lIcHBzSJ4uUUpwInsVl5n8JYNgKeWv2IL
+# UH1+8lNbFCc8gyboO8mJADBMD5zFRmuiWWIKXGaYUH1y2IQtQRfgAHxsxfddKjiS
+# vaG0Wr09znjR60LYHdAb3Xb5voRdxI8dmxFNFvdgbacJKpzb65hmJwT8chLhSw71
+# KTOX0zzGcsL42CquBZ0wXRFzkUnt2NXb6fWho/kXRiFhKgAin5RU8ouIK/dpEq/2
+# suw5ELUK5bBSdeK7/z/IVnmGLqaCOhfjjf65BlmW0JYagIm+D6WSYi7xSW5fosX3
+# sdlmR3WCyGZHvI3O+AOIvWrIUQtL2wSUtaIoKT6qzM+ZCAnGO8RLqCopDvo6JwCe
+# jGV5gXwOX/SH133Qc9J6DbwK1mmAJM6RuSKXaTHMhlikknbphi0sAL7jq84BXcua
+# xnXdOXCyTzeW691vW8aI4inYmykg4sKr3PWbvfSmClO2tsGd82v3Y7SvEHGMWzYp
+# yBKTF9F6DmbWXO9sfP2+mEpmBVa0ewJ3T3js6PzTTSNM8Tzvo5IvS+cUXzUQMnAm
+# VtHfcAlFRp8Q1N+0AZTwWd3RrDP2uW2As++ZM4ZGWcOhhsv5k+cs5yVjdzx3IVPA
+# 908D0163ebO3DO74zkcqzMr+ait3/U/hKijaFkICANxbn8siknacnn/I6RUy
 # SIG # End signature block
